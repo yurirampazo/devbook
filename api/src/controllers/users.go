@@ -5,6 +5,7 @@ import (
 	"api/src/model"
 	"api/src/repository"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -28,7 +29,13 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repository := repository.NewUsersRepository(db)
-	repository.Create(user)
+	userID, err := repository.Create(user)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.Write([]byte(fmt.Sprintf("Inserted ID: %d ", userID)))
 }
 
 // get users
