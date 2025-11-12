@@ -8,7 +8,10 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // create user
@@ -27,7 +30,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if err = user.Prepare(); err != nil {
 		response.Error(w, http.StatusBadRequest, err)
-		return 
+		return
 	}
 
 	db, err := database.Connect()
@@ -62,18 +65,42 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	repo := repository.NewUsersRepository(db)
-	users, err := repo.Find (nameOrNick)
+	users, err := repo.Find(nameOrNick)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err)
+		return
 	}
-
 
 	response.JSON(w, http.StatusOK, users)
 }
 
 // get user
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Getting User"))
+	params := mux.Vars(r)
+
+	userID, err := strconv.ParseUint(params["userId"], 10, 64)
+
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+
+	db, err := database.Connect()
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repository.NewUsersRepository(db)
+	user, err := repo.FindByID(userID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.JSON(w, http.StatusOK, user)
 }
 
 // update user
