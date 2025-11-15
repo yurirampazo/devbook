@@ -16,9 +16,9 @@ type User struct {
 	CreatedAt time.Time `json:"createdAt,omitempty"`
 }
 
-//Prepare will validate and format user received data
-func (user *User) Prepare() error {
-	if err := user.validate(); err != nil {
+// Prepare will validate and format user received data
+func (user *User) Prepare(step string) error {
+	if err := user.validate(step); err != nil {
 		return err
 	}
 
@@ -26,21 +26,21 @@ func (user *User) Prepare() error {
 	return nil
 }
 
-func (user *User) validate() error {
+func (user *User) validate(step string) error {
 	if user.Name == "" {
 		return errors.New("Name cannot be empty")
 	}
-	
+
 	if user.Nick == "" {
 		return errors.New("Nick cannot be empty")
-	}	
-	
-	if user.Password == "" {
-		return errors.New("Password cannot be empty")
 	}
 
 	if user.Email == "" {
 		return errors.New("Email cannot be empty")
+	}
+
+	if user.Password == "" && step == "register" {
+		return errors.New("Password cannot be empty")
 	}
 
 	return nil
