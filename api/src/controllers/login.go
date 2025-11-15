@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"api/src/auth"
 	"api/src/database"
 	"api/src/model"
 	"api/src/repository"
 	"api/src/response"
 	"api/src/security"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -44,8 +46,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// w.Write([]byte("CONGRATULATIONS! You're logged IN!"))
-	response.JSON(w, http.StatusTeapot, "Con MOTHER FUCKING gratulations, you're LOGGED IN, my friendly!")
-
-
+	token, _ := auth.GenerateToken(savedUser.ID)
+	fmt.Println(token)
+	w.Write([]byte(token))
 }
