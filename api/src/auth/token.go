@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"api/src/config"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -20,5 +21,5 @@ func GenerateToken(userID uint64) (string, error) {
 	/*Sign token
 	Input a secret as parameter, should be securely generated, also as a good practice remove from source code and put it into an .env file
 	*/
-	return token.SignedString([]byte("secret"))
+	return token.SignedString([]byte(config.SecretKey))
 }
