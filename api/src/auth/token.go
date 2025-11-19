@@ -2,6 +2,10 @@ package auth
 
 import (
 	"api/src/config"
+	"errors"
+	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -22,4 +26,34 @@ func GenerateToken(userID uint64) (string, error) {
 	Input a secret as parameter, should be securely generated, also as a good practice remove from source code and put it into an .env file
 	*/
 	return token.SignedString([]byte(config.SecretKey))
+}
+
+// Validates received token 
+func ValidateToken(r *http.Request) error {
+	tokenString := extractToken(r)
+	token, err := jwt.Parse(tokenString, returnSecretKey)
+	if err != nil {
+		return err
+	}
+	
+	if _, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return nil
+	}
+	return errors.New("Invalid Token.")
+}
+
+func extractToken(r *http.Request) string {
+	token := r.Header.Get("Authorization")
+	if len(strings.Split(token, " ")) == 2 {
+		return strings.Split(token, " ")[1]
+	}
+
+	return ""
+}
+
+func returnSecretKey(token *jwt.Token) (interface{},error) {
+	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		return nil, fmt.Errorf("Unexpected Signature Method! %v", token.Header["alg"])
+	}
+	return config.SecretKey, nil
 }
