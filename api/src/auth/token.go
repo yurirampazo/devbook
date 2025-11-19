@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -56,4 +57,23 @@ func returnSecretKey(token *jwt.Token) (interface{},error) {
 		return nil, fmt.Errorf("Unexpected Signature Method! %v", token.Header["alg"])
 	}
 	return config.SecretKey, nil
+}
+
+// Returns userID from JWT
+func ExtractUserID(r *http.Request) (uint64, error) {
+	tokenString := extractToken(r)
+	token, err := jwt.Parse(tokenString, returnSecretKey)
+	if err != nil {
+		return 0, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		userID, err := strconv.ParseUint(fmt.Sprintf("%.0f",claims["userId"]), 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return userID, nil
+	}
+
+	return 0, errors.New("Invalid Token.")
 }
