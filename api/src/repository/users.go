@@ -127,7 +127,7 @@ func (repository *Users) DeleteById(userID uint64) error {
 	return nil
 }
 
-// FInds registered user by email
+// Finds registered user by email
 func (repository *Users) FindByEmail(email string) (model.User, error) {
 	line, err := repository.db.Query("SELECT id, password FROM users WHERE email = ?", email)
 	if err != nil {
@@ -143,4 +143,19 @@ func (repository *Users) FindByEmail(email string) (model.User, error) {
 		}
 	}
 	return user, nil
+}
+
+//Follow another user
+func (userRepository *Users) Follow (userID, followerID uint64) error {
+	statement, err := userRepository.db.Prepare("INSERT IGNORE INTO followers (user_id, follower_id) VALUES (?, ?)")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(userID, followerID); err != nil {
+		return err
+	}
+
+	return nil
 }
