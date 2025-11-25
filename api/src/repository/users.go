@@ -71,7 +71,7 @@ func (repository Users) Find(nameOrNick string) ([]model.User, error) {
 }
 
 //Finds User BY Id
-func (repository *Users) FindByID(userId uint64) (model.User, error) {
+func (repository Users) FindByID(userId uint64) (model.User, error) {
 	lines, err := repository.db.Query("SELECT id, name, nick, email, createdAt FROM users WHERE id = ?", userId)
 	if err != nil {
 		return model.User{}, err
@@ -95,7 +95,7 @@ func (repository *Users) FindByID(userId uint64) (model.User, error) {
 }
 
 // Update user
-func (repository *Users) UpdateUser(user model.User, userID uint64) error {
+func (repository Users) UpdateUser(user model.User, userID uint64) error {
 	statement , err := repository.db.Prepare("UPDATE users SET name = ?, nick = ?, email = ? WHERE id = ?",)
 
 	if err != nil {
@@ -112,7 +112,7 @@ func (repository *Users) UpdateUser(user model.User, userID uint64) error {
 }
 
 // Delete user by id
-func (repository *Users) DeleteById(userID uint64) error {
+func (repository Users) DeleteById(userID uint64) error {
 	statement, err := repository.db.Prepare("DELETE FROM users WHERE id = ?",)
 
 	if err != nil {
@@ -128,7 +128,7 @@ func (repository *Users) DeleteById(userID uint64) error {
 }
 
 // Finds registered user by email
-func (repository *Users) FindByEmail(email string) (model.User, error) {
+func (repository Users) FindByEmail(email string) (model.User, error) {
 	line, err := repository.db.Query("SELECT id, password FROM users WHERE email = ?", email)
 	if err != nil {
 		return model.User{}, err
@@ -146,7 +146,7 @@ func (repository *Users) FindByEmail(email string) (model.User, error) {
 }
 
 //Follow another user
-func (userRepository *Users) Follow (userID, followerID uint64) error {
+func (userRepository Users) Follow (userID, followerID uint64) error {
 	statement, err := userRepository.db.Prepare("INSERT IGNORE INTO followers (user_id, follower_id) VALUES (?, ?)")
 	if err != nil {
 		return err
@@ -161,7 +161,7 @@ func (userRepository *Users) Follow (userID, followerID uint64) error {
 }
 
 // Unfollow someone, is that simple.
-func (userRepository *Users) Unfollow (userID, followerID uint64) error {
+func (userRepository Users) Unfollow (userID, followerID uint64) error {
 	statement, err := userRepository.db.Prepare("DELETE FROM followers WHERE user_id = ? AND follower_id = ?")
 		if err != nil {
 		return err
@@ -175,7 +175,7 @@ func (userRepository *Users) Unfollow (userID, followerID uint64) error {
 }
 
 // Find followers
-func (userRepository *Users) FindFollowers (userID uint64) ([]model.User, error) {
+func (userRepository Users) FindFollowers (userID uint64) ([]model.User, error) {
 	lines, err := userRepository.db.Query(`
 	
 	SELECT u.id, u.name, u.nick, u.email, u.createdAt
@@ -210,7 +210,7 @@ func (userRepository *Users) FindFollowers (userID uint64) ([]model.User, error)
 }
 
 // Find following
-func (userRepository *Users) FindFollowing (userID uint64) ([]model.User, error) {
+func (userRepository Users) FindFollowing (userID uint64) ([]model.User, error) {
 	lines, err := userRepository.db.Query(`
 	
 	SELECT u.id, u.name, u.nick, u.email, u.createdAt
@@ -242,4 +242,37 @@ func (userRepository *Users) FindFollowing (userID uint64) ([]model.User, error)
 
 	}	
 	return followers, nil
+}
+
+// Finds password by userID
+func (userRepository Users) FindPassword(userID uint64) (string, error) {
+	line, err := userRepository.db.Query("SELECT password FROM users WHERE id = ?", userID)
+	if err != nil {
+		return "", err
+	}
+	defer line.Close()
+
+	var user model.User
+
+	if line.Next() {
+		if err = line.Scan(&user.Password); err != nil {
+			return "", err
+		}
+	}
+	return user.Password, nil
+}
+
+// Update User Password 
+func (repo Users) UpdatePassword(userID uint64, password string) error {
+	statement, err := repo.db.Prepare("UPDATE users SET password = ? WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(password, userID); err != nil {
+		return err
+	}
+
+	return nil
 }
