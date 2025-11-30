@@ -52,7 +52,7 @@ func extractToken(r *http.Request) string {
 	return ""
 }
 
-func returnSecretKey(token *jwt.Token) (interface{},error) {
+func returnSecretKey(token *jwt.Token) (interface{}, error) {
 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 		return nil, fmt.Errorf("Unexpected Signature Method! %v", token.Header["alg"])
 	}
