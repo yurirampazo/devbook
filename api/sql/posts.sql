@@ -2,12 +2,12 @@ USE devbook;
 
 DROP TABLE IF EXISTS feed_post; 
 
-CREATE TABLE feed_post(
+CREATE TABLE posts(
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(70) NOT NULL,
     content VARCHAR(300) NOT NULL,
     author_id INT NOT NULL,
-    FOREIGN KEY (author_id) REFERENCES ON users(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
 
     likes INT DEFAULT 0,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
