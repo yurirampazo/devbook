@@ -33,6 +33,7 @@ func (repo FeedPost) Create(post model.FeedPost) (uint64, error) {
 	}
 	return uint64(lastInsertedID), nil
 }
+
 // Gets a post by its id
 func (repo FeedPost) GetById(id uint64) (model.FeedPost, error) {
 	line, err := repo.db.Query(`SELECT p.*, u.nick FROM posts p INNER JOIN users u ON u.id = p.author_id WHERE p.id = ?`, id)
@@ -57,4 +58,38 @@ func (repo FeedPost) GetById(id uint64) (model.FeedPost, error) {
 		}
 	}
 	return post, nil
+}
+
+// Find all user feed posts and following users posts
+func (repo FeedPost) FindAllPosts(userID uint64) ([]model.FeedPost, error) {
+	lines, err := repo.db.Query(`
+		SELECT DISTINCT p.*, u.nick FROM posts p 
+			INNER JOIN users u ON u.id = p.author_id 
+			INNER JOIN followers f ON p.author_id = f.user_id
+		WHERE u.id = ? OR follower_id = ? 
+	`, userID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer lines.Close()
+
+	var posts []model.FeedPost
+
+	for lines.Next() {
+		var post model.FeedPost
+
+		if err = lines.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Content,
+			&post.AuthorID,
+			&post.Likes,
+			&post.CreatedAt,
+			&post.AuthorNick,
+		); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
 }

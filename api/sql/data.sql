@@ -14,4 +14,10 @@ VALUES
 (2,1);
 
 
+INSERT INTO posts(title, content, author_id) 
+VALUES
+("User 1 POST", "This is user 1 post", 1),
+("User 2 POST", "This is user 2 post", 2),
+("User 3 POST", "This is user 3 post", 3);
+
 

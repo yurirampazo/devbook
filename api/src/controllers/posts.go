@@ -56,7 +56,27 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 // Gets the user feed user posts
 func FindPosts(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.ExtractUserID(r)
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, err)
+		return
+	}
 
+	db, err := database.Connect()
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repository.NewFeedPostsRepository(db)
+	posts, err := repo.FindAllPosts(userID)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	response.JSON(w, http.StatusOK, posts)
 }
 
 // Finds an especific post
