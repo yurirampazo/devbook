@@ -93,3 +93,18 @@ func (repo FeedPost) FindAllPosts(userID uint64) ([]model.FeedPost, error) {
 	}
 	return posts, nil
 }
+
+// Update data from a post on database
+func (repo FeedPost) UpdatePost(postID uint64, post model.FeedPost) error {
+	statement, err := repo.db.Prepare("UPDATE posts SET title = ?, content = ? WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(post.Title, post.Content, postID); err != nil {
+		return err
+	}
+
+	return nil
+}

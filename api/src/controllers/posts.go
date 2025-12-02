@@ -7,6 +7,7 @@ import (
 	"api/src/repository"
 	"api/src/response"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -105,9 +106,59 @@ func GetPostById(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, post)
 }
 
-// UPdate some post
+// Update some post
 func EditPost(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.ExtractUserID(r)
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	params := mux.Vars(r)
+	postID, err := strconv.ParseUint(params["id"], 10, 64)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
 
+	db, err := database.Connect()
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repository.NewFeedPostsRepository(db)
+
+	savedPost, err := repo.GetById(postID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if savedPost.AuthorID != userID {
+		response.Error(w, http.StatusForbidden, errors.New("Update another user post is impossible, you shall not do it!"))
+		return
+	}
+
+	reqBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		response.Error(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	var post model.FeedPost
+
+	if err = json.Unmarshal(reqBody, &post); err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if err = repo.UpdatePost(postID, post); err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	response.JSON(w, http.StatusNoContent, nil)
 }
 
 // Delete some post
