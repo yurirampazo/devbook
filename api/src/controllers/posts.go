@@ -163,5 +163,42 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 
 // Delete some post
 func DeletePost(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.ExtractUserID(r)
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+	params := mux.Vars(r)
+	postID, err := strconv.ParseUint(params["id"], 10, 64)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
 
+	db, err := database.Connect()
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repo := repository.NewFeedPostsRepository(db)
+
+	savedPost, err := repo.GetById(postID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if savedPost.AuthorID != userID {
+		response.Error(w, http.StatusForbidden, errors.New("Delete another user post is impossible, you shall not do it!"))
+		return
+	}
+
+	if err = repo.DeletePost(postID); err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	response.JSON(w, http.StatusNoContent, nil)
 }

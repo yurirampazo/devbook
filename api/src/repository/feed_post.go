@@ -108,3 +108,18 @@ func (repo FeedPost) UpdatePost(postID uint64, post model.FeedPost) error {
 
 	return nil
 }
+
+// Delete a post on database
+func (repo FeedPost) DeletePost(postID uint64) error {
+	statement, err := repo.db.Prepare("DELETE FROM posts WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(postID); err != nil {
+		return err
+	}
+
+	return nil
+}
