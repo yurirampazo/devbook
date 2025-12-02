@@ -123,3 +123,35 @@ func (repo FeedPost) DeletePost(postID uint64) error {
 
 	return nil
 }
+
+// Gets all posts from an specific user
+func (repo FeedPost) GetUserPosts(userID uint64) ([]model.FeedPost, error) {
+	lines, err := repo.db.Query(`
+   SELECT p.*, u.nick FROM posts p JOIN users u ON p.author_id = u.id
+   WHERE u.id = ?
+ `, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer lines.Close()
+
+	var posts []model.FeedPost
+
+	for lines.Next() {
+		var post model.FeedPost
+
+		if err = lines.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Content,
+			&post.AuthorID,
+			&post.Likes,
+			&post.CreatedAt,
+			&post.AuthorNick,
+		); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
