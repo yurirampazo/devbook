@@ -44,5 +44,12 @@ var feedPostRoutes = []Route {
 		RequireAuth: true,
 	},
 	
+	{
+		URI: "/posts/{postId}/like",
+		Method: http.MethodPost,
+		Function: controllers.LikePost,
+		RequireAuth: true,
+	},
+	
 	
 }
