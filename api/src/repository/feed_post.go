@@ -170,3 +170,24 @@ func (repo FeedPost) LikePost(postID uint64) error {
 
 	return nil
 }
+
+// Removes 1 Like to the post of the postID
+func (repo FeedPost) UnlikePost(postID uint64) error {
+	statement, err := repo.db.Prepare(`
+	  UPDATE posts SET likes = 
+	  CASE 
+	  	WHEN likes > 0 THEN likes - 1 
+	  	ELSE 0 
+	  END
+	  WHERE id = ?`)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(postID); err != nil {
+		return err
+	}
+
+	return nil
+}
